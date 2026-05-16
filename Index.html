@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Nest">
+<meta name="theme-color" content="#1a1a2e">
+<title>My Daily Nest</title>
+
+<!-- PWA Icon via canvas (generated at runtime) -->
+<link rel="apple-touch-icon" id="appleTouchIcon">
+<link rel="icon" id="faviconLink">
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface2: #22223b;
+  --border: rgba(255,255,255,0.07);
+  --gold: #e8c76a;
+  --gold-dim: rgba(232,199,106,0.15);
+  --rose: #e8836a;
+  --rose-dim: rgba(232,131,106,0.15);
+  --sage: #7abfa0;
+  --sage-dim: rgba(122,191,160,0.15);
+  --lilac: #a78bca;
+  --lilac-dim: rgba(167,139,202,0.15);
+  --sky: #6aace8;
+  --sky-dim: rgba(106,172,232,0.15);
+  --text: #f0eee8;
+  --text-dim: rgba(240,238,232,0.45);
+  --danger: #e86a6a;
+  --warn: #e8c76a;
+  --success: #7abfa0;
+  --r: 18px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);font-family:'Outfit',sans-serif;color:var(--text);display:flex;flex-direction:column;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+/* ── HEADER ── */
+.header{
+  background:linear-gradient(180deg,rgba(26,26,46,1) 0%,rgba(26,26,46,0.95) 100%);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:14px 18px 0;
+  flex-shrink:0;
+  position:relative;
+  z-index:50;
+}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;letter-spacing:0.3px;line-height:1;}
+.logo-text span{color:var(--gold);}
+.logo-sub{font-size:10px;color:var(--text-dim);font-weight:400;letter-spacing:0.5px;}
+.date-badge{background:var(--gold-dim);border:1px solid rgba(232,199,106,0.25);color:var(--gold);padding:6px 12px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.3px;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;margin:0 -18px;padding:0 18px;}
+.tab{flex:1;padding:10px 6px 12px;border:none;background:none;color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;letter-spacing:0.3px;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:600;}
+
+/* ── PANELS ── */
+.panels{flex:1;overflow:hidden;position:relative;}
+.panel{position:absolute;inset:0;overflow-y:auto;padding:18px 16px;display:none;-webkit-overflow-scrolling:touch;}
+.panel.active{display:block;}
+
+/* ── VOICE BANNER ── */
+.voice-banner{
+  background:linear-gradient(135deg,rgba(167,139,202,0.2),rgba(106,172,232,0.15));
+  border:1px solid rgba(167,139,202,0.3);
+  border-radius:var(--r);
+  padding:12px 16px;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.voice-dot{width:8px;height:8px;border-radius:50%;background:var(--sage);flex-shrink:0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
+.voice-text{font-size:12px;color:var(--text-dim);flex:1;}
+.voice-text strong{color:var(--text);display:block;font-size:12px;margin-bottom:1px;}
+.voice-test-btn{background:var(--lilac-dim);border:1px solid rgba(167,139,202,0.3);color:var(--lilac);padding:6px 12px;border-radius:20px;font-family:'Outfit',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;}
+
+/* ── TODAY BANNER ── */
+.today-banner{
+  background:linear-gradient(135deg,var(--rose-dim),var(--gold-dim));
+  border:1px solid rgba(232,131,106,0.2);
+  border-radius:var(--r);
+  padding:16px 18px;
+  margin-bottom:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.tb-left{}
+.tb-day{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.tb-count{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--gold);line-height:1;}
+.tb-label{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.tb-right{text-align:right;}
+.tb-time{font-size:24px;font-weight:300;color:var(--text);letter-spacing:-0.5px;}
+.tb-next{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.tb-next span{color:var(--sage);}
+
+/* ── DAY NAV ── */
+.day-nav{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.day-nav::-webkit-scrollbar{display:none;}
+.day-chip{padding:7px 14px;border:1.5px solid var(--border);background:var(--surface);border-radius:20px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.day-chip.active{background:var(--rose-dim);border-color:var(--rose);color:var(--rose);}
+
+/* ── SECTION LABEL ── */
+.section-label{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--text-dim);margin:16px 0 10px;display:flex;align-items:center;gap:8px;letter-spacing:0.5px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── SCHEDULE ITEMS ── */
+.sched-list{display:flex;flex-direction:column;gap:8px;}
+.sched-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:13px 14px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition:transform .15s;
+  position:relative;
+  overflow:hidden;
+}
+.sched-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r) 0 0 var(--r);}
+.sched-item.c-gold::before{background:var(--gold);}
+.sched-item.c-rose::before{background:var(--rose);}
+.sched-item.c-sage::before{background:var(--sage);}
+.sched-item.c-lilac::before{background:var(--lilac);}
+.sched-item.c-sky::before{background:var(--sky);}
+.sched-item.upcoming{border-color:rgba(232,199,106,0.25);background:rgba(232,199,106,0.05);}
+.sched-item.past{opacity:0.45;}
+.sched-time{min-width:64px;text-align:center;}
+.sched-time-main{font-size:13px;font-weight:600;color:var(--text);line-height:1.1;}
+.sched-time-end{font-size:10px;color:var(--text-dim);margin-top:1px;}
+.sched-body{flex:1;}
+.sched-task{font-size:13px;font-weight:500;color:var(--text);line-height:1.3;}
+.sched-freq{font-size:10px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;}
+.sched-icon{font-size:22px;}
+.now-indicator{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.5s infinite;}
+
+/* ── ADVI ── */
+.advi-header-card{
+  background:linear-gradient(135deg,rgba(122,191,160,0.15),rgba(106,172,232,0.1));
+  border:1px solid rgba(122,191,160,0.2);
+  border-radius:var(--r);
+  padding:16px;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.advi-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--sage),var(--sky));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.advi-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text);}
+.advi-sub{font-size:11px;color:var(--text-dim);margin-top:2px;}
+
+/* ── FINANCE ── */
+.fin-salary{
+  background:linear-gradient(135deg,var(--surface2),#1e1e38);
+  border:1px solid rgba(232,199,106,0.2);
+  border-radius:var(--r);
+  padding:18px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+}
+.fin-salary::after{
+  content:'💼';
+  position:absolute;right:-10px;top:-10px;
+  font-size:80px;opacity:0.07;
+}
+.fin-sal-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.fin-sal-amount{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:700;color:var(--gold);line-height:1;}
+.fin-sal-sub{font-size:12px;color:var(--text-dim);margin-top:6px;}
+.fin-sal-next{display:inline-block;margin-top:8px;background:var(--gold-dim);border:1px solid rgba(232,199,106,0.25);color:var(--gold);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;}
+
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.fin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
+.fin-card-icon{font-size:20px;margin-bottom:8px;}
+.fin-card-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.fin-card-amount{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;}
+.fin-card-freq{font-size:10px;color:var(--text-dim);margin-top:3px;}
+
+/* ── FORTNIGHTLY TRACKER ── */
+.fn-tracker{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.fn-tracker-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.fn-tracker-sub{font-size:11px;color:var(--text-dim);margin-bottom:16px;}
+.fn-cycle-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.fn-cycle-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.fn-cycle-label{flex:1;text-align:center;font-size:13px;font-weight:500;color:var(--text);}
+.fn-bars{display:flex;flex-direction:column;gap:10px;}
+.fn-bar-row{display:flex;flex-direction:column;gap:4px;}
+.fn-bar-header{display:flex;justify-content:space-between;align-items:center;}
+.fn-bar-name{font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;}
+.fn-bar-amounts{font-size:12px;font-weight:600;}
+.fn-bar-track{height:7px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;}
+.fn-bar-fill{height:100%;border-radius:10px;transition:width .8s ease;}
+.fn-total-row{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.fn-total-label{font-size:13px;color:var(--text-dim);}
+.fn-total-amount{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--sage);}
+.fn-log-btn{width:100%;margin-top:14px;padding:12px;background:var(--sage-dim);border:1px solid rgba(122,191,160,0.3);color:var(--sage);border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.fn-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;justify-content:center;}
+.fn-modal.open{display:flex;}
+.fn-modal-card{background:var(--surface2);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;}
+.fn-modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;margin-bottom:16px;}
+.fn-modal-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.fn-modal-label{font-size:12px;color:var(--text-dim);}
+.fn-modal-inputs{display:flex;gap:8px;}
+.fn-input{flex:1;padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;}
+.fn-input:focus{border-color:var(--sage);}
+.fn-save-btn{width:100%;padding:13px;background:var(--sage);border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:var(--bg);cursor:pointer;margin-top:8px;}
+.fn-cancel-btn{width:100%;padding:10px;background:none;border:none;color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;margin-top:6px;}
+
+/* ── DAILY TRACKER ── */
+.tracker-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.tracker-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin-bottom:4px;}
+.tracker-sub{font-size:11px;color:var(--text-dim);margin-bottom:18px;}
+.ring-wrap{display:flex;gap:18px;align-items:center;margin-bottom:18px;}
+.ring-info{flex:1;}
+.ring-budget{font-size:11px;color:var(--text-dim);margin-bottom:4px;}
+.ring-remaining{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;}
+.ring-remaining.safe{color:var(--sage);}
+.ring-remaining.warn{color:var(--warn);}
+.ring-remaining.over{color:var(--danger);}
+.ring-remaining-sub{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.exp-inputs{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.exp-row{display:flex;gap:8px;}
+.exp-input{flex:1;padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;}
+.exp-input:focus{border-color:var(--rose);}
+.exp-add-btn{padding:11px 18px;background:var(--rose);border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:white;cursor:pointer;}
+.exp-list-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.exp-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;}
+.exp-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--surface2);border-radius:10px;}
+.exp-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.exp-note{flex:1;font-size:12px;color:var(--text);}
+.exp-time{font-size:10px;color:var(--text-dim);}
+.exp-amt{font-size:13px;font-weight:600;color:var(--rose);}
+.exp-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:0 3px;line-height:1;}
+.exp-empty{text-align:center;padding:18px;font-size:12px;color:var(--text-dim);}
+.week-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.week-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.week-bars{display:flex;gap:5px;align-items:flex-end;height:64px;}
+.wbar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;}
+.wbar{width:100%;border-radius:3px 3px 0 0;transition:height .5s;min-height:3px;}
+.wbar.safe{background:var(--sage);}
+.wbar.warn{background:var(--warn);}
+.wbar.over{background:var(--danger);}
+.wbar.empty{background:rgba(255,255,255,0.06);}
+.wbar-day{font-size:9px;color:var(--text-dim);}
+.wbar-amt{font-size:9px;color:var(--text);font-weight:600;height:12px;}
+
+/* ── NOTIFICATION TOAST ── */
+.toast{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--surface2);border:1px solid var(--gold);
+  border-radius:14px;padding:14px 18px;z-index:300;
+  min-width:260px;max-width:320px;text-align:center;
+  opacity:0;transition:all .4s ease;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-icon{font-size:24px;margin-bottom:6px;}
+.toast-task{font-size:14px;font-weight:600;color:var(--gold);}
+.toast-time{font-size:11px;color:var(--text-dim);margin-top:3px;}
+
+.bottom-space{height:24px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">🪺</div>
+      <div>
+        <div class="logo-text">My Daily <span>Nest</span></div>
+        <div class="logo-sub">Your personal rhythm</div>
+      </div>
+    </div>
+    <div class="date-badge" id="dateBadge">—</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('mine',this)">🌿 My Day</button>
+    <button class="tab" onclick="switchTab('advi',this)">⭐ Advi</button>
+    <button class="tab" onclick="switchTab('finance',this)">💰 Finance</button>
+  </div>
+</div>
+
+<!-- PANELS -->
+<div class="panels">
+
+  <!-- ═══ MY DAY ═══ -->
+  <div class="panel active" id="panel-mine">
+
+    <div class="voice-banner">
+      <div class="voice-dot" id="voiceDot"></div>
+      <div class="voice-text">
+        <strong id="voiceStatus">Voice reminders active 🔊</strong>
+        <span id="voiceNext">Checking schedule…</span>
+      </div>
+      <button class="voice-test-btn" onclick="testVoice()">Test 🔊</button>
+    </div>
+
+    <div class="today-banner">
+      <div class="tb-left">
+        <div class="tb-day" id="tbDay">—</div>
+        <div class="tb-count" id="tbCount">0</div>
+        <div class="tb-label">tasks today</div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-time" id="tbTime">—</div>
+        <div class="tb-next">Next: <span id="tbNext">—</span></div>
+      </div>
+    </div>
+
+    <div class="day-nav" id="dayNav"></div>
+
+    <div id="schedSections"></div>
+    <div class="bottom-space"></div>
+  </div>
+
+  <!-- ═══ ADVI ═══ -->
+  <div class="panel" id="panel-advi">
+    <div class="advi-header-card">
+      <div class="advi-avatar">⭐</div>
+      <div>
+        <div class="advi-name">Advi's Schedule</div>
+        <div class="advi-sub">All activities in one place</div>
+      </div>
+    </div>
+    <div class="day-nav" id="adviDayNav"></div>
+    <div class="sched-list" id="adviList"></div>
+    <div class="bottom-space"></div>
+  </div>
+
+  <!-- ═══ FINANCE ═══ -->
+  <div class="panel" id="panel-finance">
+
+    <!-- Salary -->
+    <div class="fin-salary">
+      <div class="fin-sal-label">Fortnightly Salary</div>
+      <div class="fin-sal-amount">$2,100</div>
+      <div class="fin-sal-sub">Last pay: 14 May 2026</div>
+      <div class="fin-sal-next">Next pay: <strong id="nextPayDate">—</strong></div>
+    </div>
+
+    <!-- Savings cards -->
+    <div class="fin-grid">
+      <div class="fin-card">
+        <div class="fin-card-icon">🏦</div>
+        <div class="fin-card-label">Savings</div>
+        <div class="fin-card-amount" style="color:var(--sage)">$800</div>
+        <div class="fin-card-freq">Fortnightly</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-icon">🚀</div>
+        <div class="fin-card-label">Space Ship</div>
+        <div class="fin-card-amount" style="color:var(--rose)">$200</div>
+        <div class="fin-card-freq">Fortnightly</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-icon">🪙</div>
+        <div class="fin-card-label">Gold Savings</div>
+        <div class="fin-card-amount" style="color:var(--gold)">$200</div>
+        <div class="fin-card-freq">Fortnightly</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-card-icon">✈️</div>
+        <div class="fin-card-label">Travel Savings</div>
+        <div class="fin-card-amount" style="color:var(--sky)">$100</div>
+        <div class="fin-card-freq">Fortnightly</div>
+      </div>
+    </div>
+
+    <!-- Fortnightly Savings Tracker -->
+    <div class="fn-tracker">
+      <div class="fn-tracker-title">📊 Fortnightly Savings Log</div>
+      <div class="fn-tracker-sub">Track actual savings each cycle</div>
+
+      <div class="fn-cycle-nav">
+        <button class="fn-cycle-btn" onclick="changeCycle(-1)">‹</button>
+        <div class="fn-cycle-label" id="cycleLabel">—</div>
+        <button class="fn-cycle-btn" onclick="changeCycle(1)">›</button>
+      </div>
+
+      <div class="fn-bars" id="fnBars"></div>
+
+      <div class="fn-total-row">
+        <div class="fn-total-label">Total saved this cycle</div>
+        <div class="fn-total-amount" id="fnTotal">$0</div>
+      </div>
+
+      <button class="fn-log-btn" onclick="openFnModal()">+ Log This Cycle's Savings</button>
+    </div>
+
+    <!-- Daily Spending Tracker -->
+    <div class="tracker-card">
+      <div class="tracker-title">🛒 Daily Spending</div>
+      <div class="tracker-sub" id="trackerDate">Today · Budget $30</div>
+
+      <div class="ring-wrap">
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="9" cx="45" cy="45" r="36"/>
+          <circle id="ringFill" fill="none" stroke="var(--sage)" stroke-width="9" stroke-linecap="round"
+            cx="45" cy="45" r="36"
+            stroke-dasharray="226.2" stroke-dashoffset="226.2"
+            transform="rotate(-90 45 45)"
+            style="transition:stroke-dashoffset .6s ease,stroke .4s;"/>
+          <text x="45" y="41" text-anchor="middle" dominant-baseline="middle"
+            style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:700;fill:var(--text);" id="ringAmt">$0</text>
+          <text x="45" y="53" text-anchor="middle" dominant-baseline="middle"
+            style="font-size:8px;fill:rgba(240,238,232,0.45);font-family:'Outfit',sans-serif;">spent</text>
+        </svg>
+        <div class="ring-info">
+          <div class="ring-budget">Daily limit: $30.00</div>
+          <div class="ring-remaining safe" id="remAmt">$30.00 left</div>
+          <div class="ring-remaining-sub" id="remSub">You're doing great! 🎉</div>
+        </div>
+      </div>
+
+      <div class="exp-inputs">
+        <div class="exp-row">
+          <input class="exp-input" type="number" id="expAmt" placeholder="$ Amount" min="0" step="0.01" onkeydown="if(event.key==='Enter')addExp()">
+          <button class="exp-add-btn" onclick="addExp()">+ Add</button>
+        </div>
+        <input class="exp-input" type="text" id="expNote" placeholder="What for? e.g. Coffee, lunch…" onkeydown="if(event.key==='Enter')addExp()">
+      </div>
+
+      <div class="exp-list-label">Today's Expenses</div>
+      <div class="exp-list" id="expList"><div class="exp-empty">No expenses yet 🌿</div></div>
+
+      <div class="week-section">
+        <div class="week-label">This Week</div>
+        <div class="week-bars" id="weekBars"></div>
+      </div>
+    </div>
+
+    <div class="bottom-space"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toastIcon">🌅</div>
+  <div class="toast-task" id="toastTask">Wake Up</div>
+  <div class="toast-time" id="toastTime">5:00 AM</div>
+</div>
+
+<!-- Fortnightly Log Modal -->
+<div class="fn-modal" id="fnModal">
+  <div class="fn-modal-card">
+    <div class="fn-modal-title">Log Savings</div>
+    <div id="fnModalFields"></div>
+    <button class="fn-save-btn" onclick="saveFnCycle()">Save This Cycle</button>
+    <button class="fn-cancel-btn" onclick="closeFnModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const DAYS_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS_SHORT=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const mySched=[
+  {time:'5:00',task:'Wake Up',icon:'🌅',freq:'daily',color:'c-gold',period:'morning'},
+  {time:'5:30',end:'6:30',task:'Exercise',icon:'🏃‍♀️',freq:'daily',color:'c-rose',period:'morning'},
+  {time:'6:40',task:'My Cup of Tea',icon:'🍵',freq:'daily',color:'c-gold',period:'morning'},
+  {time:'6:45',end:'7:25',task:"Advi's School Prep",icon:'🎒',freq:'weekday',color:'c-sage',period:'morning'},
+  {time:'7:30',end:'8:00',task:'Getting Ready for Office',icon:'👗',freq:'weekday',color:'c-rose',period:'morning'},
+  {time:'8:15',task:'Leave for Office',icon:'🚗',freq:'weekday',color:'c-lilac',period:'morning'},
+  {time:'9:00',task:'At Office',icon:'💼',freq:'weekday',color:'c-sky',period:'morning'},
+  {time:'9:00',task:'Grocery Shopping',icon:'🛒',freq:'saturday',color:'c-gold',period:'morning'},
+  {time:'8:00',end:'10:00',task:'Study Time',icon:'📖',freq:'sunday',color:'c-sage',period:'morning'},
+  {time:'15:00',end:'17:00',task:'Study Time',icon:'📚',freq:'saturday',color:'c-sage',period:'afternoon'},
+  {time:'14:00',task:'Friends & Family Time',icon:'👨‍👩‍👧',freq:'sunday',color:'c-lilac',period:'afternoon'},
+  {time:'18:00',task:'Back Home',icon:'🏠',freq:'weekday',color:'c-sky',period:'evening'},
+  {time:'18:30',task:'Dinner',icon:'🍽️',freq:'daily',color:'c-rose',period:'evening'},
+  {time:'19:00',task:'Movie Time',icon:'🎥',freq:'saturday',color:'c-gold',period:'evening'},
+  {time:'19:30',end:'20:30',task:'Exam Preparation',icon:'📝',freq:'weekday',color:'c-sage',period:'evening'},
+  {time:'21:00',end:'21:30',task:'Gratitude Journal & Reading',icon:'📔',freq:'daily',color:'c-lilac',period:'evening'},
+];
+
+const adviSched=[
+  {time:'6:00',task:'Wake Up',icon:'☀️',freq:'daily',color:'c-gold'},
+  {time:'6:30',task:'Milk',icon:'🥛',freq:'daily',color:'c-sky'},
+  {time:'7:00',task:'Breakfast',icon:'🥣',freq:'daily',color:'c-rose'},
+  {time:'8:00',task:'School',icon:'🏫',freq:'weekday',color:'c-sage'},
+  {time:'15:00',task:'Lunch',icon:'🍱',freq:'weekday',color:'c-lilac'},
+  {time:'16:30',end:'17:30',task:'Homework',icon:'✏️',freq:'daily',color:'c-sky'},
+  {time:'18:00',task:'Swimming',icon:'🏊',freq:'monday',color:'c-sage'},
+  {time:'18:00',task:'Music Class',icon:'🎸',freq:'tuesday',color:'c-gold'},
+  {time:'17:45',task:'Writing Class',icon:'✍️',freq:'wednesday',color:'c-rose'},
+  {time:'16:00',task:'Karate Class',icon:'🥋',freq:'thursday',color:'c-lilac'},
+  {time:'17:00',task:'Soccer',icon:'⚽',freq:'friday',color:'c-sage'},
+  {time:'13:30',task:'Writing Class',icon:'✍️',freq:'saturday',color:'c-rose'},
+  {time:'19:00',task:'Dinner',icon:'🍽️',freq:'daily',color:'c-rose'},
+  {time:'19:30',end:'20:00',task:'Playtime',icon:'🎮',freq:'daily',color:'c-lilac'},
+];
+
+// Savings categories
+const savingsCategories=[
+  {key:'savings',label:'Savings',icon:'🏦',target:800,color:'var(--sage)'},
+  {key:'spaceship',label:'Space Ship',icon:'🚀',target:200,color:'var(--rose)'},
+  {key:'gold',label:'Gold Savings',icon:'🪙',target:200,color:'var(--gold)'},
+  {key:'travel',label:'Travel Savings',icon:'✈️',target:100,color:'var(--sky)'},
+];
+
+// ── HELPERS ──────────────────────────────────
+function fmt12(t){
+  const[h,m]=t.split(':').map(Number);
+  const ampm=h>=12?'PM':'AM';
+  const hh=h%12||12;
+  return `${hh}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+function toMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function nowMins(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+
+function isToday(freq){
+  const now=new Date();
+  const dow=now.getDay();
+  const dayName=DAYS_FULL[dow].toLowerCase();
+  const isWd=dow>=1&&dow<=5;
+  if(freq==='daily') return true;
+  if(freq==='weekday'&&isWd) return true;
+  if(freq===dayName) return true;
+  return false;
+}
+
+function freqLabel(f){
+  return{daily:'Every day',weekday:'Mon–Fri',saturday:'Saturdays',sunday:'Sundays',
+    monday:'Mondays',tuesday:'Tuesdays',wednesday:'Wednesdays',thursday:'Thursdays',friday:'Fridays'}[f]||f;
+}
+
+function freqMatchesDay(freq,dayIdx){
+  const names=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const isWd=dayIdx>=1&&dayIdx<=5;
+  if(freq==='daily') return true;
+  if(freq==='weekday'&&isWd) return true;
+  if(freq===names[dayIdx]) return true;
+  return false;
+}
+
+// ── TAB SWITCHING ────────────────────────────
+function switchTab(tab,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── DAY NAV ─────────────────────────────────
+let selectedDay=new Date().getDay();
+let selectedAdviDay=new Date().getDay();
+
+function buildDayNav(containerId, selectedIdx, onSelect){
+  const el=document.getElementById(containerId);
+  el.innerHTML='';
+  const todayIdx=new Date().getDay();
+  DAYS_FULL.forEach((d,i)=>{
+    const btn=document.createElement('button');
+    btn.className='day-chip'+(i===selectedIdx?' active':'');
+    btn.textContent=(i===todayIdx?'Today':d.slice(0,3));
+    btn.onclick=()=>{
+      el.querySelectorAll('.day-chip').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      onSelect(i);
+    };
+    el.appendChild(btn);
+  });
+}
+
+function renderMyDay(dayIdx){
+  selectedDay=dayIdx;
+  const nm=nowMins();
+  const isToday=dayIdx===new Date().getDay();
+  const items=mySched.filter(s=>freqMatchesDay(s.freq,dayIdx));
+
+  const periods=[
+    {key:'morning',label:'🌅 Morning'},
+    {key:'afternoon',label:'🌞 Afternoon'},
+    {key:'evening',label:'🌙 Evening'},
+  ];
+
+  let html='';
+  periods.forEach(p=>{
+    const list=items.filter(s=>s.period===p.key);
+    if(!list.length) return;
+    html+=`<div class="section-label">${p.label}</div><div class="sched-list">`;
+    list.forEach(s=>{
+      const mins=toMins(s.time);
+      const endMins=s.end?toMins(s.end):mins+30;
+      let cls='sched-item '+s.color;
+      let nowDot='';
+      if(isToday){
+        if(nm>=mins&&nm<endMins){cls+=' upcoming';nowDot='<div class="now-indicator"></div>';}
+        else if(nm>endMins) cls+=' past';
+      }
+      html+=`<div class="${cls}">
+        <div class="sched-time">
+          <div class="sched-time-main">${fmt12(s.time)}</div>
+          ${s.end?`<div class="sched-time-end">${fmt12(s.end)}</div>`:''}
+        </div>
+        <div class="sched-body">
+          <div class="sched-task">${s.task}</div>
+          <div class="sched-freq">${freqLabel(s.freq)}</div>
+        </div>
+        <div class="sched-icon">${s.icon}</div>
+        ${nowDot}
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  if(!html) html='<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:13px">Nothing scheduled for this day 🌿</div>';
+  document.getElementById('schedSections').innerHTML=html;
+
+  // update count
+  document.getElementById('tbCount').textContent=items.length;
+}
+
+function renderAdviDay(dayIdx){
+  selectedAdviDay=dayIdx;
+  const items=adviSched.filter(s=>freqMatchesDay(s.freq,dayIdx));
+  if(!items.length){
+    document.getElementById('adviList').innerHTML='<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:13px">Nothing scheduled 🌿</div>';
+    return;
+  }
+  document.getElementById('adviList').innerHTML=items.map(s=>`
+    <div class="sched-item ${s.color}" style="margin-bottom:8px">
+      <div class="sched-time">
+        <div class="sched-time-main">${fmt12(s.time)}</div>
+        ${s.end?`<div class="sched-time-end">${fmt12(s.end)}</div>`:''}
+      </div>
+      <div class="sched-body">
+        <div class="sched-task">${s.task}</div>
+        <div class="sched-freq">${freqLabel(s.freq)}</div>
+      </div>
+      <div class="sched-icon">${s.icon}</div>
+    </div>`).join('');
+}
+
+// ── CLOCK & HEADER ───────────────────────────
+function updateClock(){
+  const now=new Date();
+  document.getElementById('dateBadge').textContent=
+    `${DAYS_FULL[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]}`;
+  document.getElementById('tbDay').textContent=
+    DAYS_FULL[now.getDay()].toUpperCase();
+  document.getElementById('tbTime').textContent=
+    now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+  // Next task today
+  const nm=nowMins();
+  const todayItems=mySched
+    .filter(s=>freqMatchesDay(s.freq,now.getDay()))
+    .filter(s=>toMins(s.time)>nm)
+    .sort((a,b)=>toMins(a.time)-toMins(b.time));
+  if(todayItems.length){
+    const next=todayItems[0];
+    document.getElementById('tbNext').textContent=`${next.icon} ${next.task} at ${fmt12(next.time)}`;
+    document.getElementById('voiceNext').textContent=`Next: ${next.task} at ${fmt12(next.time)}`;
+  } else {
+    document.getElementById('tbNext').textContent='All done for today! 🎉';
+    document.getElementById('voiceNext').textContent='All tasks done for today 🎉';
+  }
+
+  // Refresh current/past highlights every minute
+  if(now.getSeconds()===0) renderMyDay(selectedDay);
+}
+
+// ── NEXT PAY DATE ────────────────────────────
+function setNextPay(){
+  const base=new Date(2026,4,14);
+  const now=new Date();
+  let next=new Date(base);
+  while(next<=now) next=new Date(next.getTime()+14*86400000);
+  document.getElementById('nextPayDate').textContent=
+    `${next.getDate()} ${MONTHS[next.getMonth()]} 2026`;
+}
+
+// ── FORTNIGHTLY SAVINGS ──────────────────────
+let currentCycleIdx=0;
+function getCycles(){
+  const base=new Date(2026,4,14);
+  const cycles=[];
+  for(let i=0;i<12;i++){
+    const start=new Date(base.getTime()+i*14*86400000);
+    const end=new Date(start.getTime()+13*86400000);
+    cycles.push({
+      start,end,
+      label:`${start.getDate()} ${MONTHS[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`,
+      key:`cycle_${start.getFullYear()}_${start.getMonth()}_${start.getDate()}`
+    });
+  }
+  return cycles;
+}
+
+function changeCycle(dir){
+  const cycles=getCycles();
+  currentCycleIdx=Math.max(0,Math.min(cycles.length-1,currentCycleIdx+dir));
+  renderFnCycle();
+}
+
+function renderFnCycle(){
+  const cycles=getCycles();
+  const c=cycles[currentCycleIdx];
+  document.getElementById('cycleLabel').textContent=c.label;
+  const data=JSON.parse(localStorage.getItem(c.key)||'{}');
+
+  let totalSaved=0;
+  let html='';
+  savingsCategories.forEach(cat=>{
+    const actual=data[cat.key]||0;
+    totalSaved+=actual;
+    const pct=Math.min(actual/cat.target,1)*100;
+    const statusColor=actual>=cat.target?'var(--sage)':actual>0?'var(--warn)':'rgba(255,255,255,0.2)';
+    html+=`<div class="fn-bar-row">
+      <div class="fn-bar-header">
+        <div class="fn-bar-name">${cat.icon} ${cat.label}</div>
+        <div class="fn-bar-amounts" style="color:${statusColor}">
+          $${actual.toFixed(0)} <span style="color:var(--text-dim);font-weight:400">/ $${cat.target}</span>
+        </div>
+      </div>
+      <div class="fn-bar-track">
+        <div class="fn-bar-fill" style="width:${pct}%;background:${cat.color}"></div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('fnBars').innerHTML=html;
+  const totalColor=totalSaved>=1300?'var(--sage)':totalSaved>0?'var(--warn)':'var(--text-dim)';
+  document.getElementById('fnTotal').textContent=`$${totalSaved.toFixed(0)}`;
+  document.getElementById('fnTotal').style.color=totalColor;
+}
+
+function openFnModal(){
+  const cycles=getCycles();
+  const c=cycles[currentCycleIdx];
+  const data=JSON.parse(localStorage.getItem(c.key)||'{}');
+  let html='';
+  savingsCategories.forEach(cat=>{
+    const val=data[cat.key]||'';
+    html+=`<div class="fn-modal-row">
+      <div class="fn-modal-label">${cat.icon} ${cat.label} (target: $${cat.target})</div>
+      <input class="fn-input" type="number" id="fn_${cat.key}" placeholder="$0" value="${val}" min="0">
+    </div>`;
+  });
+  document.getElementById('fnModalFields').innerHTML=html;
+  document.getElementById('fnModal').classList.add('open');
+}
+
+function closeFnModal(){document.getElementById('fnModal').classList.remove('open');}
+
+function saveFnCycle(){
+  const cycles=getCycles();
+  const c=cycles[currentCycleIdx];
+  const data={};
+  savingsCategories.forEach(cat=>{
+    const v=parseFloat(document.getElementById('fn_'+cat.key).value)||0;
+    data[cat.key]=v;
+  });
+  localStorage.setItem(c.key,JSON.stringify(data));
+  closeFnModal();
+  renderFnCycle();
+}
+
+// Set currentCycleIdx to today's cycle
+function initCycleIdx(){
+  const cycles=getCycles();
+  const now=new Date();
+  for(let i=cycles.length-1;i>=0;i--){
+    if(now>=cycles[i].start){currentCycleIdx=i;break;}
+  }
+}
+
+// ── DAILY SPENDING ───────────────────────────
+const BUDGET=30;
+const SHORT_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function dayKey(d){return`exp_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;}
+function getExp(k){try{return JSON.parse(localStorage.getItem(k)||'[]');}catch{return[];}}
+function saveExpL(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function total(l){return l.reduce((s,e)=>s+e.amount,0);}
+
+function addExp(){
+  const amt=parseFloat(document.getElementById('expAmt').value);
+  const note=document.getElementById('expNote').value.trim()||'Expense';
+  if(!amt||amt<=0){document.getElementById('expAmt').focus();return;}
+  const k=dayKey(new Date());
+  const l=getExp(k);
+  l.push({amount:amt,note,time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),id:Date.now()});
+  saveExpL(k,l);
+  document.getElementById('expAmt').value='';
+  document.getElementById('expNote').value='';
+  renderTracker();
+}
+
+function delExp(id){
+  const k=dayKey(new Date());
+  saveExpL(k,getExp(k).filter(e=>e.id!==id));
+  renderTracker();
+}
+
+function renderTracker(){
+  const now=new Date();
+  const list=getExp(dayKey(now));
+  const spent=total(list);
+  const rem=BUDGET-spent;
+  const pct=Math.min(spent/BUDGET,1);
+  const C=226.2;
+
+  // ring
+  const rf=document.getElementById('ringFill');
+  rf.style.strokeDashoffset=C-pct*C;
+  rf.style.stroke=spent>BUDGET?'var(--danger)':spent>22?'var(--warn)':'var(--sage)';
+  document.getElementById('ringAmt').textContent='$'+spent.toFixed(0);
+
+  // remaining
+  const re=document.getElementById('remAmt');
+  const rs=document.getElementById('remSub');
+  if(rem>=0){
+    re.textContent=`$${rem.toFixed(2)} left`;
+    re.className='ring-remaining '+(rem>10?'safe':'warn');
+    rs.textContent=rem>15?"You're doing great! 🎉":rem>0?'Almost at limit 🙏':'Right on budget!';
+  } else {
+    re.textContent=`$${Math.abs(rem).toFixed(2)} over!`;
+    re.className='ring-remaining over';
+    rs.textContent='Over budget today 😬';
+  }
+
+  // list
+  const el=document.getElementById('expList');
+  el.innerHTML=list.length===0
+    ?'<div class="exp-empty">No expenses yet 🌿</div>'
+    :[...list].reverse().map(e=>`
+      <div class="exp-item">
+        <div class="exp-dot"></div>
+        <div class="exp-note">${e.note}</div>
+        <div class="exp-time">${e.time}</div>
+        <div class="exp-amt">$${e.amount.toFixed(2)}</div>
+        <button class="exp-del" onclick="delExp(${e.id})">×</button>
+      </div>`).join('');
+
+  // week bars
+  const bars=document.getElementById('weekBars');
+  bars.innerHTML='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const s=total(getExp(dayKey(d)));
+    const bc=s===0?'empty':s>BUDGET?'over':s>22?'warn':'safe';
+    const h=s===0?4:Math.min(s/BUDGET,1.3)*50;
+    const isT=i===0;
+    bars.innerHTML+=`<div class="wbar-wrap">
+      <div class="wbar-amt">${s>0?'$'+s.toFixed(0):''}</div>
+      <div class="wbar ${bc}" style="height:${h}px;opacity:${isT?1:.6};${isT?'outline:1.5px solid var(--gold);outline-offset:2px;':''}"></div>
+      <div class="wbar-day" style="font-weight:${isT?700:400}">${SHORT_DAYS[d.getDay()]}</div>
+    </div>`;
+  }
+
+  // date label
+  const d=new Date();
+  document.getElementById('trackerDate').textContent=
+    `${DAYS_FULL[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} · Budget $30`;
+}
+
+// ── VOICE REMINDERS ──────────────────────────
+let voiceEnabled=false;
+let lastSpoken='';
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.92;u.pitch=1;u.volume=1;
+  window.speechSynthesis.speak(u);
+}
+
+function testVoice(){
+  speak("Hello! Voice reminders are working. I'll announce each task when it's time.");
+}
+
+function showToast(icon,task,time){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastTask').textContent=task;
+  document.getElementById('toastTime').textContent=time;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),6000);
+}
+
+function checkVoiceReminders(){
+  const now=new Date();
+  const nm=nowMins();
+  const todayDow=now.getDay();
+
+  mySched.forEach(s=>{
+    if(!freqMatchesDay(s.freq,todayDow)) return;
+    const mins=toMins(s.time);
+    // fire within the current minute
+    if(nm===mins){
+      const key=`spoken_${s.time}_${now.toDateString()}`;
+      if(localStorage.getItem(key)) return;
+      localStorage.setItem(key,'1');
+      speak(`Time for ${s.task}`);
+      showToast(s.icon,s.task,fmt12(s.time));
+    }
+  });
+}
+
+// Also check Advi's schedule
+function checkAdviReminders(){
+  const now=new Date();
+  const nm=nowMins();
+  const todayDow=now.getDay();
+
+  adviSched.forEach(s=>{
+    if(!freqMatchesDay(s.freq,todayDow)) return;
+    const mins=toMins(s.time)-15; // 15 min before
+    if(nm===mins){
+      const key=`spoken_advi_${s.time}_${now.toDateString()}`;
+      if(localStorage.getItem(key)) return;
+      localStorage.setItem(key,'1');
+      speak(`Reminder: Advi has ${s.task} in 15 minutes`);
+      showToast(s.icon,`Advi: ${s.task} in 15 min`,fmt12(s.time));
+    }
+  });
+}
+
+// Init speech on first tap (required by browsers)
+function initSpeech(){
+  if(voiceEnabled) return;
+  speak('');
+  voiceEnabled=true;
+  document.getElementById('voiceStatus').textContent='Voice reminders active 🔊';
+  document.getElementById('voiceDot').style.background='var(--sage)';
+  document.removeEventListener('click',initSpeech);
+}
+
+// ── PWA ICON (canvas) ────────────────────────
+function generateIcon(){
+  const c=document.createElement('canvas');
+  c.width=192;c.height=192;
+  const ctx=c.getContext('2d');
+  // background
+  const g=ctx.createLinearGradient(0,0,192,192);
+  g.addColorStop(0,'#1a1a2e');g.addColorStop(1,'#0f0f1a');
+  ctx.fillStyle=g;
+  ctx.roundRect(0,0,192,192,40);
+  ctx.fill();
+  // nest emoji
+  ctx.font='120px serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('🪺',96,96);
+  const url=c.toDataURL();
+  document.getElementById('appleTouchIcon').href=url;
+  document.getElementById('faviconLink').href=url;
+}
+
+// ── INIT ─────────────────────────────────────
+generateIcon();
+setNextPay();
+buildDayNav('dayNav',new Date().getDay(),renderMyDay);
+buildDayNav('adviDayNav',new Date().getDay(),renderAdviDay);
+renderMyDay(new Date().getDay());
+renderAdviDay(new Date().getDay());
+initCycleIdx();
+renderFnCycle();
+renderTracker();
+updateClock();
+
+setInterval(updateClock,1000);
+setInterval(()=>{checkVoiceReminders();checkAdviReminders();},10000);
+
+document.addEventListener('click',initSpeech,{once:true});
+document.getElementById('voiceStatus').textContent='Tap anywhere to enable voice 🔊';
+document.getElementById('voiceDot').style.background='var(--warn)';
+</script>
+</body>
+</html>
